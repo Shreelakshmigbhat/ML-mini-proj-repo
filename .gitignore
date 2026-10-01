@@ -1,0 +1,17 @@
+# RSNA data is large and must be obtained separately.
+data/raw/
+data/images/
+data/splits/
+
+# Local Python and notebook state.
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Generated experiment outputs (keep directory placeholders only).
+results/*.csv
+results/*.png
+results/*.jpg
+results/*.pdf

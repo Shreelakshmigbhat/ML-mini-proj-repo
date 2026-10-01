@@ -13,6 +13,8 @@ For Phase 1, the loader expects:
 The detailed class file is necessary to separate `Normal` from
 `No Lung Opacity / Not Normal`; both can have `Target=0` in the box labels.
 The loader includes `Lung Opacity` and `Normal`, preserves all pneumonia boxes,
-and excludes `No Lung Opacity / Not Normal` rows. It writes split manifests to
+and excludes `No Lung Opacity / Not Normal` rows. It resizes images to 128 x
+128, then can compute per-pixel means and standard deviations from the training
+split and reuse them for the other splits. It writes split manifests to
 `data/splits/` when run; DICOM pixel files and generated manifests are ignored
 by Git.
