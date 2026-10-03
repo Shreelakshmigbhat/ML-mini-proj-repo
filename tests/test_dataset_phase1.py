@@ -62,6 +62,14 @@ class DatasetSmokeTest(unittest.TestCase):
                     "height": 9 if target else "",
                 })
 
+            label_rows.append({
+                "patientId": "pos-00",
+                "Target": 1,
+                "x": 12,
+                "y": 13,
+                "width": 14,
+                "height": 15,
+            })
             labels_csv = root / "train_labels.csv"
             class_info_csv = root / "class_info.csv"
             with labels_csv.open("w", newline="", encoding="utf-8") as stream:
@@ -80,8 +88,15 @@ class DatasetSmokeTest(unittest.TestCase):
             self.assertEqual((len(records), excluded), (20, 1))
             self.assertEqual((len(train), len(validation), len(test)), (14, 4, 2))
             self.assertEqual(sum(record.label == 1 for record in records), 10)
-            pneumonia_record = next(record for record in records if record.label == 1)
+            pneumonia_record = next(record for record in records if record.patient_id == "pos-00")
+            self.assertEqual(len(pneumonia_record.boxes), 2)
             self.assertEqual((pneumonia_record.boxes[0].x, pneumonia_record.boxes[0].y), (2.0, 3.0))
+            self.assertEqual((pneumonia_record.boxes[1].x, pneumonia_record.boxes[1].y), (12.0, 13.0))
+            self.assertEqual(len({r.patient_id for r in train + validation + test}), len(records))
+            self.assertEqual(
+                [r.patient_id for r in train],
+                [r.patient_id for r in split_records(records, seed=42)[0]],
+            )
 
             stats = compute_normalization_stats(record.image_path for record in train)
             stats_path = root / "normalization.npz"
@@ -92,6 +107,25 @@ class DatasetSmokeTest(unittest.TestCase):
             self.assertEqual(image.shape, (128, 128))
             self.assertEqual(image.dtype, np.float32)
             self.assertTrue(np.isfinite(image).all())
+
+            with labels_csv.open("r", newline="", encoding="utf-8") as stream:
+                invalid_rows = list(csv.DictReader(stream))
+            invalid_rows[0]["Target"] = "0.5"
+            with labels_csv.open("w", newline="", encoding="utf-8") as stream:
+                writer = csv.DictWriter(stream, fieldnames=invalid_rows[0].keys())
+                writer.writeheader()
+                writer.writerows(invalid_rows)
+            with self.assertRaisesRegex(ValueError, "Target must be exactly 0 or 1"):
+                load_rsna_records(labels_csv, class_info_csv, image_dir)
+
+            invalid_rows[0]["Target"] = "1"
+            invalid_rows[0]["x"] = "nan"
+            with labels_csv.open("w", newline="", encoding="utf-8") as stream:
+                writer = csv.DictWriter(stream, fieldnames=invalid_rows[0].keys())
+                writer.writeheader()
+                writer.writerows(invalid_rows)
+            with self.assertRaisesRegex(ValueError, "non-finite box value"):
+                load_rsna_records(labels_csv, class_info_csv, image_dir)
 
 
 if __name__ == "__main__":

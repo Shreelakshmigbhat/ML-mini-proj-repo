@@ -53,6 +53,12 @@ also reads training images and writes `normalization.npz`. This can take time
 for the full dataset. To change any path, pass a different command-line
 argument; dataset paths are not hard-coded in the loader.
 
+Normalization uses per-pixel training-set means and standard deviations. The
+Stage 2 box-label CSV is required; the sample-submission CSV cannot replace it.
+If your authorized dataset copy does not contain `stage_2_train_labels.csv`,
+obtain that file from the same dataset source before running Phase 1. Dataset
+CSVs and DICOM directories are excluded from Git.
+
 The `notebooks/01_data_preparation.ipynb` notebook shows how to load records,
 inspect a split, preprocess one DICOM, and visualize its label and box.
 

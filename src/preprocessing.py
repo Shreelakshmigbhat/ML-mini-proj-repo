@@ -109,6 +109,10 @@ def load_dicom_image(
             f"Normalization statistics have shapes {stats.mean.shape} and {stats.std.shape}; "
             f"expected {pixels.shape}."
         )
+    if not np.isfinite(stats.mean).all() or not np.isfinite(stats.std).all():
+        raise ValueError("Normalization statistics contain non-finite values.")
+    if np.any(stats.std < 0):
+        raise ValueError("Normalization standard deviations must not be negative.")
     # A zero std means that location is constant in the training set. Keeping
     # its centered value avoids division by zero; using 1 is a numerical choice.
     safe_std = np.where(stats.std > 0, stats.std, 1.0)

@@ -2,6 +2,9 @@
 data/raw/
 data/images/
 data/splits/
+data/stage_2_train_images/
+data/stage_2_test_images/
+data/stage_2_*.csv
 
 # Local Python and notebook state.
 __pycache__/

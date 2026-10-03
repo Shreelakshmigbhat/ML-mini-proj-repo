@@ -122,11 +122,14 @@ def load_rsna_records(
     for row in label_rows:
         patient_id = _required(row, "patientId", labels_path)
         try:
-            target = int(float(_required(row, "Target", labels_path)))
+            raw_target = float(_required(row, "Target", labels_path))
         except ValueError as exc:
             raise ValueError(f"Target must be 0 or 1 for patient {patient_id}.") from exc
-        if target not in (0, 1):
-            raise ValueError(f"Target must be 0 or 1 for patient {patient_id}; got {target}.")
+        if not np.isfinite(raw_target) or raw_target not in (0, 1):
+            raise ValueError(
+                f"Target must be exactly 0 or 1 for patient {patient_id}; got {raw_target}."
+            )
+        target = int(raw_target)
         previous_target = target_by_patient.setdefault(patient_id, target)
         if previous_target != target:
             raise ValueError(f"Conflicting Target values for patient {patient_id}.")
@@ -136,8 +139,13 @@ def load_rsna_records(
             if any(value is None for value in values):
                 raise ValueError(f"Pneumonia patient {patient_id} has a row without a full box.")
             x, y, width, height = (float(value) for value in values)  # type: ignore[arg-type]
-            if width <= 0 or height <= 0:
-                raise ValueError(f"Pneumonia patient {patient_id} has a non-positive box size.")
+            if not np.isfinite((x, y, width, height)).all():
+                raise ValueError(f"Pneumonia patient {patient_id} has a non-finite box value.")
+            if x < 0 or y < 0 or width <= 0 or height <= 0:
+                raise ValueError(
+                    f"Pneumonia patient {patient_id} has a negative coordinate or "
+                    "non-positive box size."
+                )
             boxes_by_patient.setdefault(patient_id, []).append(Box(x, y, width, height))
         else:
             boxes_by_patient.setdefault(patient_id, [])
@@ -278,7 +286,7 @@ def main() -> None:
     print(f"  class info CSV: {Path(args.class_info_csv).resolve()}")
     print(f"  DICOM directory: {Path(args.image_dir).resolve()}")
     print("  image size: 128 x 128")
-    print("  normalization: per-image min-max to [0, 1]")
+    print("  normalization: per-pixel training-set mean/std standardization")
     print("  split: stratified 70/20/10")
     print(f"  random seed: {args.seed}")
 
