@@ -62,9 +62,41 @@ CSVs and DICOM directories are excluded from Git.
 The `notebooks/01_data_preparation.ipynb` notebook shows how to load records,
 inspect a split, preprocess one DICOM, and visualize its label and box.
 
-## Later project phases
+## Phase 2 modeling
 
-Baselines, the reference CNN, CAM localization, DenseNet121, result tables, and
-their plots have not been implemented. They remain for later phases. Results
-will be measured from the supplied data; reported paper values will not be
-substituted for local results.
+Phase 2 implements flattened-pixel Logistic Regression, linear SVM, and Random
+Forest baselines, plus a 10-convolution reference CNN. Run the baselines after
+Phase 1 has generated its splits and normalization statistics:
+
+```powershell
+python -m src.baselines `
+  --splits-dir data/splits `
+  --output results/baseline_metrics.json `
+  --seed 42
+```
+
+Models fit on the training partition only; validation and test metrics are
+reported without tuning on those partitions. The JSON records accuracy,
+precision, recall, F1, ROC-AUC, and confusion counts. Run one or more models
+with `--models logistic_regression linear_svm random_forest`.
+
+Train the paper-inspired reference CNN with the source's Adam optimizer,
+learning rate, and 20 epochs:
+
+```powershell
+python -m src.reference_cnn `
+  --splits-dir data/splits `
+  --output results/reference_cnn_metrics.json `
+  --checkpoint results/reference_cnn.pt `
+  --seed 42
+```
+
+The CNN uses the configured Python environment's PyTorch dependency. It follows
+the reported 10 padded 3 x 3 convolution / ReLU layers, global
+average pooling, two-class linear head, Adam optimizer, learning rate 0.0001,
+and 20 epochs. Widths and downsampling are implementation choices recorded in
+the metrics JSON. The paper also requires segmented images; no lung masks or
+trained U-Net were supplied, so this run uses original images only. This is an
+explicit deviation, not an exact reproduction. CAM localization and DenseNet121
+remain for later phases. Results are measured from the supplied data; reported
+paper values are not substituted for local results.

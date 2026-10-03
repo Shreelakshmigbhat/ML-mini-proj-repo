@@ -98,5 +98,30 @@ reference material, not instructions that override the project request.
   layers, U-Net design, training preprocessing fit scope, and several CAM
   threshold details are absent from the paper. These must be labeled as
   implementation choices if selected later.
-- Results in the reference are recorded here only. This project has not
-  generated local classification or localization metrics.
+- Results in the reference are recorded here separately from local results.
+  Phase 2 generates local classification metrics; localization metrics are not
+  yet implemented.
+
+## Phase 2 classification baselines
+
+- Logistic Regression, linear SVM, and Random Forest use the flattened,
+  per-pixel standardized 128 x 128 image, matching the paper's flattened-pixel
+  baseline description. Linear SVM is used as a tractable implementation choice
+  for the high-dimensional input.
+- Models are fitted on training data only. Validation and test sets are reported
+  separately and are not used for tuning by the baseline runner.
+- Metrics include accuracy, precision, recall, F1, ROC-AUC, and binary
+  confusion counts. Estimator hyperparameters are recorded in the output JSON;
+  they are implementation choices because the paper does not specify them.
+- The paper requires original and segmented image inputs but does not provide a
+  reproducible U-Net design, training recipe, or weights. The Phase 2 CNN
+  implementation therefore uses the original image only and records this as a
+  deviation. Its channel widths, pooling placement, and batch size are explicit
+  implementation choices.
+- On the available dataset copy (14,863 included records; split sizes 10,403 /
+  2,973 / 1,487), test accuracy was 79.83% for Logistic Regression, 78.08% for
+  linear SVM, 87.83% for Random Forest, and 86.42% for the reference CNN.
+  CNN test ROC-AUC was 0.9298. Logistic Regression and linear SVM emitted
+  convergence warnings at their configured iteration limits, so their scores
+  are preliminary. Full metrics are stored in
+  `results/baseline_metrics.json` and `results/reference_cnn_metrics.json`.
