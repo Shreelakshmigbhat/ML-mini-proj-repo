@@ -19,3 +19,6 @@ results/*.png
 results/*.jpg
 results/*.pdf
 results/*.pt
+results/cam_examples/
+!results/classification_comparison.png
+!results/cam_localization_comparison.png

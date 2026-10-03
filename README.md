@@ -1,9 +1,9 @@
 # Pneumonia localization mini-project
 
-This repository is being built in phases to reproduce the paper *Weakly
-Supervised Pneumonia Localization* and compare its reference CNN with a
-DenseNet121 extension. Phase 1 implements data loading and preprocessing only.
-No model metrics are reported yet.
+This repository implements data preparation, classification baselines, a
+paper-inspired CNN, DenseNet121 comparison, and CAM-based lesion localization
+for the paper *Weakly Supervised Pneumonia Localization*. Reproduction choices
+and limitations are documented in `results/reproduction_notes.md`.
 
 ## Reference paper
 
@@ -97,6 +97,55 @@ average pooling, two-class linear head, Adam optimizer, learning rate 0.0001,
 and 20 epochs. Widths and downsampling are implementation choices recorded in
 the metrics JSON. The paper also requires segmented images; no lung masks or
 trained U-Net were supplied, so this run uses original images only. This is an
-explicit deviation, not an exact reproduction. CAM localization and DenseNet121
-remain for later phases. Results are measured from the supplied data; reported
-paper values are not substituted for local results.
+explicit deviation, not an exact reproduction.
+
+Train the single-channel DenseNet121 comparison. The default run downloads
+ImageNet initialization weights and fits a binary classifier on frozen features:
+
+```powershell
+python -m src.densenet121 `
+  --splits-dir data/splits `
+  --output results/densenet121_metrics.json `
+  --checkpoint results/densenet121.pt `
+  --seed 42
+```
+
+Evaluate CAM boxes against the test annotations for either trained model:
+
+```powershell
+python -m src.localization `
+  --model reference_cnn `
+  --checkpoint results/reference_cnn.pt `
+  --splits-dir data/splits `
+  --output results/reference_cnn_localization.json `
+  --thresholds 0.2 0.45 0.7 `
+  --visualization-dir results/cam_examples/reference_cnn
+```
+
+Localization reports image-level maximum IoU at each heatmap threshold, with
+missed/healthy images scored zero, plus a pneumonia-only mean. CAM thresholds
+and aggregation are implementation choices because the paper does not fully
+specify them. DenseNet121 is also compatible with this localization command.
+The optional visualization directory receives overlays for the first five
+correctly classified pneumonia test cases.
+
+For DenseNet121, use `--model densenet121` and
+`--checkpoint results/densenet121.pt`. Localization metric JSON files and CAM
+overlay images are written locally; the overlays contain dataset radiographs
+and are excluded from Git.
+The project does not contain lung-mask annotations or a trained U-Net; the
+lesion-box labels cannot substitute for lung segmentation. Results are measured
+from the supplied data; paper values are not substituted for local results.
+
+The supervised R-CNN reported by the paper is not implemented; the source does
+not provide enough architecture/training detail for an exact reconstruction.
+
+Generate model comparison plots and a concise results summary after training and
+localization:
+
+```powershell
+python -m src.report
+```
+
+This writes classification and CAM localization plots plus
+`results/experiment_summary.md`.

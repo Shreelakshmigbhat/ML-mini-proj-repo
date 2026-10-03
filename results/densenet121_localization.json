@@ -1,0 +1,44 @@
+{
+  "protocol": {
+    "model": "densenet121",
+    "split": "test",
+    "prediction_cutoff": 0.5,
+    "cam_thresholds": [
+      0.2,
+      0.45,
+      0.7
+    ],
+    "connected_components": "8-connected",
+    "iou_aggregation": "maximum overlap over predicted components and ground-truth boxes per image",
+    "no_detection_iou": 0.0,
+    "mean_metrics_include_healthy_cases": true,
+    "mean_metrics_include_false_negative_classifications": true
+  },
+  "thresholds": {
+    "0.20": {
+      "test_image_mean_best_iou": 0.031881870428279835,
+      "pneumonia_patient_mean_best_iou": 0.07888243149226642,
+      "test_images": 1487,
+      "pneumonia_patients": 601,
+      "predicted_positive_count": 606,
+      "detected_box_count": 670
+    },
+    "0.45": {
+      "test_image_mean_best_iou": 0.03548766885822291,
+      "pneumonia_patient_mean_best_iou": 0.0878039327656863,
+      "test_images": 1487,
+      "pneumonia_patients": 601,
+      "predicted_positive_count": 606,
+      "detected_box_count": 688
+    },
+    "0.70": {
+      "test_image_mean_best_iou": 0.04201725116669871,
+      "pneumonia_patient_mean_best_iou": 0.103959488327589,
+      "test_images": 1487,
+      "pneumonia_patients": 601,
+      "predicted_positive_count": 606,
+      "detected_box_count": 679
+    }
+  },
+  "visualizations_saved": 5
+}
